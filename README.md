@@ -1,93 +1,67 @@
-#  Loan Default Risk Analysis (Power BI + SQL)
+# Loan Default Risk Analysis — Financial Analytics Dashboard (Power BI & SQL) 📊
 
 ![Dashboard Preview](screenshots/dashboard_overview.png)
 
-##  Project Overview
-
-This project analyzes **loan default patterns** using **Power BI, SQL Server, and DAX** to understand how borrower demographics, financial attributes, and loan characteristics influence **loan default risk**.
-
-The dataset contains approximately **250,000 loan records**, and the analysis focuses on identifying patterns in **income levels, employment types, credit scores, loan purposes, and borrower demographics**.
-
-The final result is an **interactive Power BI dashboard** that helps visualize borrower behavior and financial risk metrics.
+> An end-to-end financial data analytics and risk intelligence project evaluating **250,000+ loan records** using **SQL Server**, **Power BI**, and **DAX** to analyze borrower default probability across income brackets, employment categories, and credit tiers.
 
 ---
 
-#  Project Objectives
+## 📌 Project Overview & Objectives
 
-• Analyze borrower financial profiles
-• Understand loan distribution across demographics
-• Identify factors influencing loan default risk
-• Build interactive dashboards for financial insights
+In retail banking and consumer lending, identifying early indicators of credit default is essential for capital preservation and risk-adjusted pricing. 
 
----
-
-#  Dataset Information
-
-The dataset contains the following attributes:
-
-LoanID
-Age
-Income
-LoanAmount
-CreditScore
-MonthsEmployed
-NumCreditLines
-InterestRate
-LoanTerm
-DTIRatio
-Education
-EmploymentType
-MaritalStatus
-HasMortgage
-HasDependents
-LoanPurpose
-HasCoSigner
-Default
-Loan Date (DD/MM/YYYY)
-
-Dataset Size: **~250,000 records**
+This project analyzes borrower demographic attributes, financial obligations, and loan terms to:
+- Identify high-risk segments based on Debt-to-Income (DTI) ratios and credit history.
+- Model multi-year default patterns across distinct employment classifications.
+- Formulate dynamic DAX business measures for executive dashboard reporting.
 
 ---
 
-#  Data Pipeline
+## 📊 Dataset Specifications
 
-### 1️⃣ Data Storage
+The dataset comprises **~250,000 borrower records** with 19 financial and demographic dimensions:
 
-• Imported CSV dataset into **SQL Server database**
-• Created database named **loan**
+| Attribute | Data Type | Description |
+| :--- | :--- | :--- |
+| `LoanID` | Varchar | Unique transaction identifier |
+| `Age` | Integer | Borrower age (18–65+) |
+| `Income` | Decimal | Annual verifiable borrower income |
+| `LoanAmount` | Decimal | Total principal borrowed |
+| `CreditScore` | Integer | Credit bureau score (300–850) |
+| `MonthsEmployed` | Integer | Employment tenure in months |
+| `NumCreditLines` | Integer | Open revolving and installment credit lines |
+| `InterestRate` | Decimal | Annualized loan interest rate (%) |
+| `LoanTerm` | Integer | Repayment tenure in months (12, 24, 36, 60) |
+| `DTIRatio` | Decimal | Total monthly debt service to gross monthly income |
+| `Education` | Varchar | Academic tier (High School, Bachelor, Master, PhD) |
+| `EmploymentType` | Varchar | Full-time, Part-time, Self-Employed, Unemployed |
+| `MaritalStatus` | Varchar | Single, Married, Divorced |
+| `HasMortgage` | Boolean | Existing residential mortgage flag |
+| `HasDependents` | Boolean | Financial dependent flag |
+| `LoanPurpose` | Varchar | Auto, Business, Education, Home, Personal |
+| `HasCoSigner` | Boolean | Presence of co-borrower guarantee |
+| `Default` | Binary | Target outcome: Defaulted (`1`) or Repaid (`0`) |
+| `Loan Date` | Date | Origination date |
 
-### 2️⃣ Data Connection
+---
 
-• Connected **SQL Server → Power BI**
+## 🔄 End-to-End Data Pipeline
 
-### 3️⃣ Data Preparation
-
-Performed inside **Power Query Editor**
-
-• Data profiling of entire dataset
-• Verified **no missing or error values**
-• Corrected **column data types**
-
-### 4️⃣ Data Modeling
-
-Created calculated column:
-
-```
-Year = YEAR(loan_default[Loan_Date])
+```mermaid
+flowchart LR
+    CSV["Raw Dataset\n(loan_dataset.csv - 250k rows)"] -->|SQL Ingestion Script| SQL["SQL Server Database\n(loan_default schema)"]
+    SQL -->|DirectQuery / Import Mode| PQ["Power Query Editor\n(Type casting, profiling, validation)"]
+    PQ -->|Data Modeling| Model["Tabular Data Model\n(Calculated columns, DAX measures)"]
+    Model -->|Visual Analytics| Dashboard["Interactive Power BI Dashboard\n(Demographics, Risk, Default Tracking)"]
 ```
 
-### 5️⃣ DAX Measures
-
-Created several analytical measures to support dashboard insights.
-
 ---
 
-# 📈 Key DAX Measures
+## 🧮 Key DAX Analytical Measures
 
-### Loan Amount by Purpose
-
-```
-Loan Amount by Purpose =
+### 1. Loan Amount by Purpose
+```dax
+Loan Amount by Purpose = 
 SUMX(
     FILTER(
         'loan_default',
@@ -97,173 +71,75 @@ SUMX(
 )
 ```
 
----
-
-### Average Income by Employment Type
-
-```
-Average Income by Employment Type =
+### 2. Average Income by Employment Type
+```dax
+Average Income by Employment Type = 
 CALCULATE(
     AVERAGE('loan_default'[Income]),
-    ALLEXCEPT('loan_default','loan_default'[EmploymentType])
+    ALLEXCEPT('loan_default', 'loan_default'[EmploymentType])
 )
 ```
 
----
-
-### Default Rate by Employment Type
-
-Used the following functions:
-
-COUNTROWS
-FILTER
-CALCULATE
-ALLEXCEPT
-DIVIDE
-
-To compute **default rate percentage for each employment category**.
-
----
-
-### Average Loan by Age Group
-
-Functions used:
-
-VALUES
-AVERAGEX
-
-Calculates **average loan amount for each age group**.
-
----
-
-### Default Rate by Year
-
-Logic used:
-
-COUNTROWS → total loans
-FILTER → default loans
-ALLEXCEPT → maintain year filter
-DIVIDE → safe division
-
-Used to calculate **yearly loan default rate**.
-
----
-
-### Median Loan Amount
-
-```
-Median Loan Amount =
-MEDIANX('loan_default','loan_default'[LoanAmount])
+### 3. Default Rate Calculation
+```dax
+Default Rate % = 
+DIVIDE(
+    CALCULATE(COUNTROWS('loan_default'), 'loan_default'[Default] = 1),
+    COUNTROWS('loan_default'),
+    0
+)
 ```
 
-Used to analyze **loan distribution across credit score bins**.
+### 4. Median Loan Volume across Credit Score Bins
+```dax
+Median Loan Amount = 
+MEDIANX('loan_default', 'loan_default'[LoanAmount])
+```
 
 ---
 
-#  Dashboard Preview
+## 🖥️ Dashboard Views
 
-## Loan Default Overview
+### Page 1: Loan Default & Portfolio Overview
+![Dashboard Overview](screenshots/dashboard_overview.png)
+- Macro portfolio distribution across loan purposes (Auto, Education, Mortgage).
+- Default rate correlation with borrower employment category.
+- Annual default trend tracking.
 
-![Dashboard](screenshots/dashboard_overview.png)
+### Page 2: Applicant Demographics & Financial Profiles
+![Applicant Demographics](screenshots/demographics.png)
+- Volume distribution across income brackets and education levels.
+- Co-signer and mortgage presence impact on default rates.
 
-## Applicant Demographics
-
-![Dashboard](screenshots/demographics.png)
-
-## Financial Risk Metrics
-
-![Dashboard](screenshots/financial_risk.png)
-
----
-
-#  Dashboard Pages
-
-### 1️⃣ Loan Default & Overview
-
-Visualizations include:
-
-• Loan Amount by Purpose
-• Average Income by Employment Type
-• Default Rate by Employment Type
-• Average Loan by Age Group
-• Default Rate by Year
+### Page 3: Financial Risk Metrics
+![Financial Risk](screenshots/financial_risk.png)
+- Year-over-Year (YoY) default rate velocity.
+- Default clustering across credit score bins.
 
 ---
 
-### 2️⃣ Applicant Demographics & Financial Profile
-
-Visualizations include:
-
-• Loan Amount by Income Brackets
-• Loan Distribution by Age Group
-• Loan Distribution by Education
-• Mortgage & Dependents Analysis
-• Marital Status and Credit Score Insights
-
----
-
-### 3️⃣ Financial Risk Metrics
-
-Visualizations include:
-
-• Year-over-Year Default Change
-• Year-over-Year Loan Amount Change
-• Loan Amount by Credit Score Bins
-• Income vs Employment Loan Distribution
-
----
-
-# 🛠 Tools & Technologies
-
-Power BI
-SQL Server
-DAX
-Power Query
-Excel
-
----
-
-#  Skills Demonstrated
-
-• Data Cleaning
-• Data Profiling
-• Data Modeling
-• DAX Calculations
-• Financial Data Analysis
-• Data Visualization
-• Dashboard Design
-
----
-
-#  Project Structure
+## 📁 Repository Structure
 
 ```
-loan-default-analysis-powerbi
-│
-├── Loan_Default_Dashboard.pbix
-├── loan_dataset.csv
-├── powerbi_dashboard.pdf
-├── screenshots
+loan-default-analysis-powerbi-main/
+├── screenshots/
 │   ├── dashboard_overview.png
 │   ├── demographics.png
 │   └── financial_risk.png
+├── Loan_Default_Dashboard.pbix    # Complete Power BI report with embedded data model
+├── loan_dataset.csv               # 250,000 raw lending transactions
+├── powerbi_dashboard.pdf          # High-resolution PDF export for quick review
+├── sql_setup.sql                  # Database creation and table indexing script
+├── .gitattributes
 └── README.md
 ```
 
 ---
 
-#  Future Improvements
-
-• Build **machine learning model to predict loan default risk**
-• Deploy dashboard on **Power BI Service**
-• Add **predictive analytics and financial risk scoring**
-
----
-
-#  Author
+## 👨‍💻 Author
 
 **Romit Kumar**
-Engineering Student | Data Analytics Enthusiast
-
-Skills:
-Power BI | SQL | DAX | Data Analytics | Data Visualization
+- Department of Electronics & Communication Engineering
+- Maulana Azad National Institute of Technology (MANIT), Bhopal
+- GitHub: [@RomitGoyal2303](https://github.com/RomitGoyal2303)
+- Email: `romigoyal2004@gmail.com`
