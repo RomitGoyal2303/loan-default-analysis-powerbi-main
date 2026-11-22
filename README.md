@@ -262,7 +262,7 @@ loan-default-analysis-powerbi
 
 #  Author
 
-**Himanchal mishra**
+**Romit Kumar**
 Engineering Student | Data Analytics Enthusiast
 
 Skills:
